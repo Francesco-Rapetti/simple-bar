@@ -41,6 +41,7 @@ export const Widget = React.memo(() => {
 
   const [state, setState] = React.useState();
   const [loading, setLoading] = React.useState(visible);
+  const [currentInterface, setCurrentInterface] = React.useState();
 
   /**
    * Resets the widget state.
@@ -55,16 +56,19 @@ export const Widget = React.memo(() => {
    */
   const getWifi = React.useCallback(async () => {
     if (!visible) return;
-    const [status, ssid] = await Promise.all([
+    const [status, ssid, currentInterface] = await Promise.all([
       Uebersicht.run(`ifconfig ${networkDevice} | grep status | cut -c 10-`),
-      Uebersicht.run(
-        `system_profiler SPAirPortDataType | awk '/Current Network/ {getline;$1=$1;print $0 | "tr -d ':'";exit}'`,
-      ),
+      // Uebersicht.run(
+      //   `system_profiler SPAirPortDataType | awk '/Current Network/ {getline;$1=$1;print $0 | "tr -d ':'";exit}'`,
+      // ),
+      Uebersicht.run('networksetup listpreferredwirelessnetworks en0 | awk \'NR==2 {sub(/^[ \t]+/, ""); print}\''),
+      Uebersicht.run(`route get default | awk '/interface/ {print $2}'`)
     ]);
     setState({
       status: Utils.cleanupOutput(status),
       ssid: Utils.cleanupOutput(ssid),
     });
+    setCurrentInterface(currentInterface)
     setLoading(false);
   }, [networkDevice, visible]);
 
@@ -85,7 +89,7 @@ export const Widget = React.memo(() => {
     "wifi--inactive": !isActive,
   });
 
-  const Icon = isActive ? Icons.Wifi : Icons.WifiOff;
+  const Icon = currentInterface.trim() === networkDevice.trim() ? (isActive ? Icons.Wifi : Icons.WifiOff) : Icons.Ethernet;
 
   /**
    * Handles the click event to toggle wifi.

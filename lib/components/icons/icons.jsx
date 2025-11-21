@@ -102,6 +102,7 @@ export const Dropbox = React.lazy(() => import("./library/dropbox.jsx"));
 export const Element = React.lazy(() => import("./library/element.jsx"));
 export const Emacs = React.lazy(() => import("./library/emacs.jsx"));
 export const Ethereum = React.lazy(() => import("./library/ethereum.jsx"));
+export const Ethernet = React.lazy(() => import("./library/ethernet.jsx"));
 export const EvernoteLegacy = React.lazy(
   () => import("./library/evernote-legacy.jsx"),
 );
