@@ -128,10 +128,14 @@ export const Widget = React.memo(() => {
 
   return (
     <DataWidget.Widget classes={classes} disableSlider 
-    onClick={(e) => {
-      if (e.target.className.includes("sound__slider")) return;
-      else setDisplayPercentage((prev) => !prev);
-    }}>
+      onRightClick={async (e) => {
+        await Uebersicht.run(`osascript -e "set volume output muted not (output muted of (get volume settings))"`);
+        getSound();
+      }}
+      onClick={(e) => {
+        if (e.target.className.includes("sound__slider")) return;
+        else setDisplayPercentage((prev) => !prev);
+      }}>
       <div className="sound__display">
         {showIcon && (
           <SuspenseIcon>

@@ -122,10 +122,15 @@ export const Widget = React.memo(() => {
 
   return (
     <DataWidget.Widget classes={classes} disableSlider 
-    onClick={(e) => {
-      if (e.target.className.includes("mic__slider")) return;
-      else setDisplayPercentage((prev) => !prev);
-    }}>
+      onRightClick={async (e) => {
+        if (volume > 0) setMic(0);
+        else setMic(100);
+        getMic();
+      }}
+      onClick={(e) => {
+        if (e.target.className.includes("mic__slider")) return;
+        else setDisplayPercentage((prev) => !prev);
+      }}>
       <div className="mic__display">
         {showIcon && (
           <SuspenseIcon>
