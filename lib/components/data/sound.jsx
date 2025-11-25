@@ -142,11 +142,11 @@ export const Widget = React.memo(() => {
             <Icon />
           </SuspenseIcon>
         )}
-      </div>
         {displayPercentage && <span className="sound__value">{formattedVolume}</span>}
         {outputDeviceName && !displayPercentage && (
           <span className="sound__device">{outputDeviceName}</span>
         )}
+      </div>
       <div className="sound__slider-container">
         <input
           type="range"
