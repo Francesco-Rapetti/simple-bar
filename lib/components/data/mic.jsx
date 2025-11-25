@@ -40,6 +40,8 @@ export const Widget = React.memo(() => {
   const { volume: _volume } = state || {};
   const [volume, setVolume] = React.useState(_volume && parseInt(_volume, 10));
   const [dragging, setDragging] = React.useState(false);
+  const [inputDeviceName, setInputDeviceName] = React.useState();
+  const [displayPercentage, setDisplayPercentage] = React.useState(false);
 
   /**
    * Reset the widget state.
@@ -57,7 +59,11 @@ export const Widget = React.memo(() => {
     const volume = await Uebersicht.run(
       `osascript -e 'set ovol to input volume of (get volume settings)'`,
     );
+    const inputName = await Uebersicht.run(
+      `system_profiler SPAudioDataType | awk '/^        [^ ]/ {d=$0} /Default Input Device: Yes/ {sub(/^[ \t]+/, "", d); gsub(":", "", d); print d; exit}'`,
+    );
     setState({ volume: Utils.cleanupOutput(volume) });
+    setInputDeviceName(inputName.trim());
     setLoading(false);
   }, [visible]);
 
@@ -108,20 +114,29 @@ export const Widget = React.memo(() => {
 
   const formattedVolume = `${volume.toString().padStart(2, "0")}%`;
 
+  const fillerWidth = volume / 100;
+
   const classes = Utils.classNames("mic", {
     "mic--dragging": dragging,
   });
 
   return (
-    <DataWidget.Widget classes={classes} disableSlider>
+    <DataWidget.Widget classes={classes} disableSlider 
+    onClick={(e) => {
+      if (e.target.className.includes("mic__slider")) return;
+      else setDisplayPercentage((prev) => !prev);
+    }}>
       <div className="mic__display">
         {showIcon && (
           <SuspenseIcon>
             <Icon />
           </SuspenseIcon>
         )}
-        <span className="mic__value">{formattedVolume}</span>
       </div>
+        {displayPercentage && <span className="mic__value">{formattedVolume}</span>}
+        {inputDeviceName && !displayPercentage && (
+          <span className="mic__device">{inputDeviceName}</span>
+        )}
       <div className="mic__slider-container">
         <input
           type="range"
@@ -135,6 +150,11 @@ export const Widget = React.memo(() => {
           onChange={onChange}
         />
       </div>
+
+      <div
+          className="time__filler"
+          style={{ transform: `scaleX(${fillerWidth})` }}
+        />
     </DataWidget.Widget>
   );
 });

@@ -40,6 +40,8 @@ export const Widget = React.memo(() => {
   const { volume: _volume } = state || {};
   const [volume, setVolume] = React.useState(_volume && parseInt(_volume, 10));
   const [dragging, setDragging] = React.useState(false);
+  const [outputDeviceName, setOutputDeviceName] = React.useState();
+  const [displayPercentage, setDisplayPercentage] = React.useState(false);
 
   /**
    * Reset the widget state.
@@ -54,18 +56,22 @@ export const Widget = React.memo(() => {
    */
   const getSound = React.useCallback(async () => {
     if (!visible) return;
-    const [volume, muted] = await Promise.all([
+    const [volume, muted, outputName] = await Promise.all([
       Uebersicht.run(
         `osascript -e 'set ovol to output volume of (get volume settings)'`
       ),
       Uebersicht.run(
         `osascript -e 'set ovol to output muted of (get volume settings)'`
       ),
+      Uebersicht.run(
+        `system_profiler SPAudioDataType | awk '/^        [^ ]/ {d=$0} /Default Output Device: Yes/ {sub(/^[ \t]+/, "", d); gsub(":", "", d); print d; exit}'`
+      )
     ]);
     setState({
       volume: Utils.cleanupOutput(volume),
       muted: Utils.cleanupOutput(muted),
     });
+    setOutputDeviceName(outputName.trim());
     setLoading(false);
   }, [visible]);
 
@@ -114,20 +120,29 @@ export const Widget = React.memo(() => {
 
   const formattedVolume = `${volume.toString().padStart(2, "0")}%`;
 
+  const fillerWidth = volume / 100;
+
   const classes = Utils.classNames("sound", {
     "sound--dragging": dragging,
   });
 
   return (
-    <DataWidget.Widget classes={classes} disableSlider>
+    <DataWidget.Widget classes={classes} disableSlider 
+    onClick={(e) => {
+      if (e.target.className.includes("sound__slider")) return;
+      else setDisplayPercentage((prev) => !prev);
+    }}>
       <div className="sound__display">
         {showIcon && (
           <SuspenseIcon>
             <Icon />
           </SuspenseIcon>
         )}
-        <span className="sound__value">{formattedVolume}</span>
       </div>
+        {displayPercentage && <span className="sound__value">{formattedVolume}</span>}
+        {outputDeviceName && !displayPercentage && (
+          <span className="sound__device">{outputDeviceName}</span>
+        )}
       <div className="sound__slider-container">
         <input
           type="range"
@@ -141,6 +156,11 @@ export const Widget = React.memo(() => {
           onChange={onChange}
         />
       </div>
+
+      <div
+          className="time__filler"
+          style={{ transform: `scaleX(${fillerWidth})` }}
+        />
     </DataWidget.Widget>
   );
 });
