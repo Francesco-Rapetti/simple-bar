@@ -6,6 +6,7 @@ import useWidgetRefresh from "../../hooks/use-widget-refresh";
 import useServerSocket from "../../hooks/use-server-socket";
 import { useSimpleBarContext } from "../simple-bar-context.jsx";
 import * as Utils from "../../utils";
+import { set } from "../../settings.js";
 
 export { wifiStyles as styles } from "../../styles/components/data/wifi";
 
@@ -42,6 +43,7 @@ export const Widget = React.memo(() => {
   const [state, setState] = React.useState();
   const [loading, setLoading] = React.useState(visible);
   const [currentInterface, setCurrentInterface] = React.useState();
+  const [networkNameVisible, setNetworkNameVisible] = React.useState(true);
 
   /**
    * Resets the widget state.
@@ -85,7 +87,7 @@ export const Widget = React.memo(() => {
   if (hideWifiIfDisabled && !isActive) return null;
 
   const classes = Utils.classNames("wifi", {
-    "wifi--hidden-name": !name,
+    "wifi--hidden-name": !name || !networkNameVisible,
     "wifi--inactive": !isActive,
   });
 
@@ -101,14 +103,18 @@ export const Widget = React.memo(() => {
     getWifi();
   };
 
+  const toggleWifiName = (e) => {
+    setNetworkNameVisible((prev) => !prev);
+  }
+
   return (
     <DataWidget.Widget
       classes={classes}
       Icon={showIcon ? Icon : null}
-      onClick={toggleWifiOnClick ? onClick : undefined}
+      onClick={toggleWifiOnClick ? onClick : toggleWifiName}
       onRightClick={openWifiPreferences}
     >
-      {name}
+      {networkNameVisible ? name : null}
     </DataWidget.Widget>
   );
 });
